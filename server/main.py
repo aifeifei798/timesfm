@@ -8,10 +8,13 @@
 
 import asyncio
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from server import config
 from server.api import forecast as forecast_api
@@ -57,14 +60,15 @@ app.add_middleware(
 app.include_router(system_api.router)
 app.include_router(forecast_api.router)
 
+# Web 客户端(静态页面)
+STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
 
 @app.get("/")
 def root():
-    return {
-        "service": "timesfm-forecast-api",
-        "docs": "/docs",
-        "health": "/api/health",
-    }
+    """首页即 Web 客户端。"""
+    return FileResponse(os.path.join(STATIC_DIR, "index.html"))
 
 
 if __name__ == "__main__":
